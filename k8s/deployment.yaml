@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discord-bot-deployment
+  labels:
+    app: discord-bot
+spec:
+  replicas: 1 # Количество копий бота (нам хватит одной)
+  selector:
+    matchLabels:
+      app: discord-bot
+  template:
+    metadata:
+      labels:
+        app: discord-bot
+    spec:
+      containers:
+      - name: discord-bot-container
+        # Твой образ, который мы загрузили в GCR
+        image: gcr.io/sharp-oxygen-478014-k9/discord-bot:v2
+        # Политика загрузки: всегда проверять, нет ли новой версии
+        imagePullPolicy: Always
+        
+        # Самое важное: передаем токен из Секрета в переменную окружения
+        env:
+          - name: DISCORD_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: discord-bot-secrets
+                key: DISCORD_TOKEN
+        
+        # Ограничения ресурсов (Best Practice), чтобы бот не съел всю ноду
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "250m"
