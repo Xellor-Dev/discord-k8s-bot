@@ -60,6 +60,14 @@ jobs:
     - name: Deploy
       run: |-
         cd k8s
-        kustomize edit set image gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
+        # Магия sed: заменяем строку image: ... на нашу новую версию с хешем коммита
+        sed -i "s|image: .*|image: gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA|g" deployment.yaml
+        
+        # Проверяем, что замена прошла (выводим файл в лог для отладки)
+        cat deployment.yaml
+        
+        # Применяем обновленный файл
         kubectl apply -f deployment.yaml
+        
+        # Ждем, пока бот обновится
         kubectl rollout status deployment/discord-bot-deployment
