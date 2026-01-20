@@ -84,10 +84,6 @@ async def info(ctx):
     disk_read = (disk_io.read_bytes - disk_io_start.read_bytes) // (1024**2)  # МБ
     disk_write = (disk_io.write_bytes - disk_io_start.write_bytes) // (1024**2)  # МБ
     
-    # === Кэш Discord ===
-    guilds_cached = len(bot.guilds)
-    users_cached = len(bot.cached_users) if hasattr(bot, 'cached_users') else 'N/A'
-    
     # === API метрики ===
     bot_latency = round(bot.latency * 1000)
     avg_latency = round(sum(api_latency_list) / len(api_latency_list)) if api_latency_list else 0
@@ -101,69 +97,76 @@ async def info(ctx):
     os_name = platform.system()
     os_version = platform.release()
     
-    # === Создаем Embed ===
-    embed = discord.Embed(
-        title="📊 Полный Статус Kubernetes Pod",
-        description="Детальная информация о контейнере и боте.",
+    # === ПЕРВЫЙ EMBED: БОТ, DISCORD, K8S ===
+    embed1 = discord.Embed(
+        title="📊 Статус Kubernetes Pod (1/2)",
+        description="Информация о боте и Kubernetes",
         color=0x326ce5
     )
     
-    # === РАЗДЕЛ 1: БОТ И АПТАЙМ ===
-    embed.add_field(name="🤖 Бот", value=bot.user.name, inline=True)
-    embed.add_field(name="⏱️ Аптайм", value=uptime, inline=True)
-    embed.add_field(name="📈 Команд выполнено", value=str(commands_executed), inline=True)
+    # БОТ И АПТАЙМ
+    embed1.add_field(name="🤖 Бот", value=bot.user.name, inline=True)
+    embed1.add_field(name="⏱️ Аптайм", value=uptime, inline=True)
+    embed1.add_field(name="📈 Команд выполнено", value=str(commands_executed), inline=True)
     
-    # === РАЗДЕЛ 2: DISCORD/API МЕТРИКИ ===
-    embed.add_field(name="📡 Текущий пинг", value=f"{bot_latency}ms", inline=True)
-    embed.add_field(name="📊 Средний пинг", value=f"{avg_latency}ms", inline=True)
-    embed.add_field(name="🖥️ Серверы", value=f"{guild_count}", inline=True)
+    # DISCORD/API МЕТРИКИ
+    embed1.add_field(name="📡 Текущий пинг", value=f"{bot_latency}ms", inline=True)
+    embed1.add_field(name="📊 Средний пинг", value=f"{avg_latency}ms", inline=True)
+    embed1.add_field(name="🖥️ Серверы", value=f"{guild_count}", inline=True)
+    embed1.add_field(name="👥 Пользователи", value=f"{total_members}", inline=True)
+    embed1.add_field(name="🐍 Python", value=platform.python_version(), inline=True)
+    embed1.add_field(name="🐧 ОС", value=f"{os_name} {os_version}", inline=True)
     
-    embed.add_field(name="👥 Пользователи", value=f"{total_members}", inline=True)
-    embed.add_field(name="💾 Кэш гильдий", value=f"{guilds_cached}", inline=True)
-    embed.add_field(name="🐍 Python", value=platform.python_version(), inline=True)
+    # KUBERNETES
+    embed1.add_field(name="☸️ Pod", value=K8S_POD_NAME, inline=True)
+    embed1.add_field(name="📍 Namespace", value=K8S_NAMESPACE, inline=True)
+    embed1.add_field(name="🖱️ Node", value=K8S_NODE_NAME, inline=True)
+    embed1.add_field(name="🔴 CPU Limit", value=K8S_CPU_LIMIT, inline=True)
+    embed1.add_field(name="🟡 CPU Request", value=K8S_CPU_REQUEST, inline=True)
+    embed1.add_field(name="🔵 Mem Limit", value=K8S_MEMORY_LIMIT, inline=True)
+    embed1.add_field(name="🟢 Mem Request", value=K8S_MEMORY_REQUEST, inline=True)
     
-    # === РАЗДЕЛ 3: KUBERNETES ===
-    embed.add_field(name="☸️ Pod Name", value=K8S_POD_NAME, inline=True)
-    embed.add_field(name="📍 Namespace", value=K8S_NAMESPACE, inline=True)
-    embed.add_field(name="🖱️ Node", value=K8S_NODE_NAME, inline=True)
+    # CPU ОСНОВНОЕ
+    embed1.add_field(name="⚙️ CPU Type", value=cpu_type, inline=True)
+    embed1.add_field(name="🧠 CPU Load", value=f"{cpu_usage}%", inline=True)
+    embed1.add_field(name="📌 CPU Cores", value=f"{cpu_count}физ/{cpu_count_logical}логи", inline=True)
     
-    embed.add_field(name="🔴 CPU Limit", value=K8S_CPU_LIMIT, inline=True)
-    embed.add_field(name="🟡 CPU Request", value=K8S_CPU_REQUEST, inline=True)
-    embed.add_field(name="🔵 Memory Limit", value=K8S_MEMORY_LIMIT, inline=True)
+    embed1.set_footer(text=f"Pod: {K8S_POD_NAME} | Updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    embed1.set_thumbnail(url="https://kubernetes.io/images/favicon.png")
     
-    embed.add_field(name="🟢 Memory Request", value=K8S_MEMORY_REQUEST, inline=True)
-    embed.add_field(name="🐧 ОС", value=f"{os_name} {os_version}", inline=True)
-    embed.add_field(name="⚙️ CPU", value=f"{cpu_type}", inline=True)
+    # === ВТОРОЙ EMBED: РЕСУРСЫ ===
+    embed2 = discord.Embed(
+        title="📈 Ресурсы и Метрики (2/2)",
+        description="CPU, Память, Сеть, Disk I/O",
+        color=0x326ce5
+    )
     
-    # === РАЗДЕЛ 4: CPU МЕТРИКИ ===
-    embed.add_field(name="🧠 CPU Load (общий)", value=f"{cpu_usage}%", inline=True)
-    embed.add_field(name="📌 CPU Ядра", value=f"{cpu_count} физ. / {cpu_count_logical} логич.", inline=True)
-    embed.add_field(name="⚡ CPU Freq", value=f"{cpu_freq.current:.0f} MHz", inline=True)
+    # CPU ДЕТАЛИ
+    cpu_cores_str = " | ".join([f"C{i}:{core}%" for i, core in enumerate(cpu_per_core[:6])])
+    if len(cpu_per_core) > 6:
+        cpu_cores_str += f"|+{len(cpu_per_core)-6}"
+    embed2.add_field(name="🔥 CPU по ядрам", value=cpu_cores_str, inline=False)
+    embed2.add_field(name="⚡ CPU Freq", value=f"{cpu_freq.current:.0f} MHz", inline=True)
     
-    cpu_cores_str = " | ".join([f"Core {i}: {core}%" for i, core in enumerate(cpu_per_core[:4])])
-    if len(cpu_per_core) > 4:
-        cpu_cores_str += f" | +{len(cpu_per_core)-4} more"
-    embed.add_field(name="🔥 CPU по ядрам", value=cpu_cores_str, inline=False)
+    # ПАМЯТЬ
+    embed2.add_field(name="💾 RAM Бота", value=f"{process_memory}MB", inline=True)
+    embed2.add_field(name="🔋 RAM Система", value=f"{ram_used}/{ram_total}GB ({ram_usage}%)", inline=True)
+    embed2.add_field(name="📊 RAM Free", value=f"{ram_info.available // (1024**3)}GB", inline=True)
     
-    # === РАЗДЕЛ 5: ПАМЯТЬ ===
-    embed.add_field(name="💾 RAM Бота (процесс)", value=f"{process_memory}MB", inline=True)
-    embed.add_field(name="🔋 RAM Система", value=f"{ram_used}GB / {ram_total}GB ({ram_usage}%)", inline=True)
-    embed.add_field(name="📊 RAM Доступно", value=f"{ram_info.available // (1024**3)}GB", inline=True)
+    # СЕТЬ
+    embed2.add_field(name="📤 Sent (с запуска)", value=f"{net_bytes_sent}MB", inline=True)
+    embed2.add_field(name="📥 Recv (с запуска)", value=f"{net_bytes_recv}MB", inline=True)
+    embed2.add_field(name="🔄 Total Network", value=f"{net_bytes_sent + net_bytes_recv}MB", inline=True)
     
-    # === РАЗДЕЛ 6: СЕТЕВЫЕ МЕТРИКИ ===
-    embed.add_field(name="📤 Отправлено (с запуска)", value=f"{net_bytes_sent}MB", inline=True)
-    embed.add_field(name="📥 Получено (с запуска)", value=f"{net_bytes_recv}MB", inline=True)
-    embed.add_field(name="🔄 Всего передачи", value=f"{net_bytes_sent + net_bytes_recv}MB", inline=True)
+    # DISK I/O
+    embed2.add_field(name="💿 Disk Read", value=f"{disk_read}MB", inline=True)
+    embed2.add_field(name="💿 Disk Write", value=f"{disk_write}MB", inline=True)
+    embed2.add_field(name="💿 Disk Total I/O", value=f"{disk_read + disk_write}MB", inline=True)
     
-    # === РАЗДЕЛ 7: DISK I/O ===
-    embed.add_field(name="💿 Disk Read (с запуска)", value=f"{disk_read}MB", inline=True)
-    embed.add_field(name="💿 Disk Write (с запуска)", value=f"{disk_write}MB", inline=True)
-    embed.add_field(name="💿 Disk Total I/O", value=f"{disk_read + disk_write}MB", inline=True)
-    
-    embed.set_footer(text=f"Pod: {K8S_POD_NAME} | Cluster: {K8S_NODE_NAME} | Updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-    embed.set_thumbnail(url="https://kubernetes.io/images/favicon.png")
+    embed2.set_footer(text=f"Node: {K8S_NODE_NAME} | Updated: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    embed2.set_thumbnail(url="https://kubernetes.io/images/favicon.png")
 
-    await ctx.send(embed=embed)
+    await ctx.send(embeds=[embed1, embed2])
 
 if __name__ == "__main__":
     if not TOKEN:
