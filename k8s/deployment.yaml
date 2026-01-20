@@ -21,13 +21,38 @@ spec:
         # Политика загрузки: всегда проверять, нет ли новой версии
         imagePullPolicy: Always
         
-        # Самое важное: передаем токен из Секрета в переменную окружения
+        # Передаем токен из Секрета в переменную окружения
         env:
+          # === Discord Token ===
           - name: DISCORD_TOKEN
             valueFrom:
               secretKeyRef:
                 name: discord-bot-secrets
                 key: DISCORD_TOKEN
+          
+          # === Kubernetes Metadata ===
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          
+          # === Kubernetes Resource Limits (for info display) ===
+          - name: CPU_LIMIT
+            value: "250m"
+          - name: MEMORY_LIMIT
+            value: "128Mi"
+          - name: CPU_REQUEST
+            value: "50m"
+          - name: MEMORY_REQUEST
+            value: "64Mi"
         
         # Ограничения ресурсов (Best Practice), чтобы бот не съел всю ноду
         resources:
