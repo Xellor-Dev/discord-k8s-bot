@@ -1,8 +1,3 @@
-"""
-Discord Kubernetes Bot - главный файл.
-Отрефакторенная версия с модульной архитектурой.
-"""
-
 import os
 import discord
 from discord.ext import commands
@@ -13,63 +8,50 @@ from logger import setup_logger
 from services.metrics import MetricsCollector
 from commands import ping
 
-# Настройка логирования
 logger = setup_logger("bot")
 
-# Загрузка переменных окружения
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-# Настройка intents
 intents = discord.Intents.default()
 intents.message_content = True
 
-# Создание экземпляра бота
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
 
 
 @bot.event
 async def on_ready():
-    """Событие при успешном запуске бота."""
-    logger.info(f'Бот {bot.user.name} готов! ID: {bot.user.id}')
-    
-    # Инициализируем MetricsCollector (синглтон)
+    logger.info(f'Bot {bot.user.name} ready! ID: {bot.user.id}')
     MetricsCollector()
-    logger.info("MetricsCollector инициализирован")
-    
-    # Устанавливаем статус бота
+    logger.info("MetricsCollector initialized")
     await bot.change_presence(activity=discord.Game(name=BOT_ACTIVITY_NAME))
-    logger.info(f'Статус бота установлен: {BOT_ACTIVITY_NAME}')
+    logger.info(f'Bot status set: {BOT_ACTIVITY_NAME}')
 
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: Exception):
-    """Обработчик ошибок команд."""
-    logger.error(f"Ошибка при выполнении команды {ctx.command}: {error}", exc_info=True)
-    await ctx.send(f"❌ Произошла ошибка: {str(error)}")
+    logger.error(f"Command error {ctx.command}: {error}", exc_info=True)
+    await ctx.send(f"❌ Error: {str(error)}")
 
 
 def main():
-    """Главная функция запуска бота."""
     if not TOKEN:
-        logger.error("DISCORD_TOKEN не найден в переменных окружения!")
-        print("❌ Ошибка: DISCORD_TOKEN не найден!")
+        logger.error("DISCORD_TOKEN not found in environment!")
+        print("❌ Error: DISCORD_TOKEN not found!")
         return
     
-    # Регистрируем команды
     ping.setup(bot)
-    logger.info("Команды зарегистрированы: !ping")
+    logger.info("Commands registered: !ping")
     
-    # Запускаем бота
     try:
-        logger.info("Запуск бота...")
+        logger.info("Starting bot...")
         bot.run(TOKEN)
     except KeyboardInterrupt:
-        logger.info("Получен сигнал остановки (Ctrl+C)")
+        logger.info("Shutdown signal received (Ctrl+C)")
     except Exception as e:
-        logger.error(f"Критическая ошибка при запуске бота: {e}", exc_info=True)
+        logger.error(f"Critical error: {e}", exc_info=True)
     finally:
-        logger.info("Бот остановлен")
+        logger.info("Bot stopped")
 
 
 if __name__ == "__main__":

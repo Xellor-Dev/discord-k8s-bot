@@ -1,15 +1,9 @@
-"""
-Модуль для получения Kubernetes метаданных из переменных окружения.
-Использует Downward API для получения информации о Pod, Node, Namespace.
-"""
-
 import os
 from dataclasses import dataclass
 
 
 @dataclass
 class KubernetesInfo:
-    """Класс для хранения Kubernetes метаданных."""
     pod_name: str
     namespace: str
     node_name: str
@@ -20,12 +14,6 @@ class KubernetesInfo:
 
 
 def get_k8s_info() -> KubernetesInfo:
-    """
-    Получает Kubernetes метаданные из переменных окружения.
-    
-    Returns:
-        KubernetesInfo объект с метаданными кластера
-    """
     return KubernetesInfo(
         pod_name=os.getenv('HOSTNAME', 'unknown'),
         namespace=os.getenv('POD_NAMESPACE', 'default'),

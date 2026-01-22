@@ -1,15 +1,8 @@
-"""
-Конфигурация бота - константы и настройки.
-"""
-
-# === Discord настройки ===
 COMMAND_PREFIX = '!'
-BOT_ACTIVITY_NAME = "в Kubernetes GKE"
+BOT_ACTIVITY_NAME = "on Kubernetes GKE"
 
-# === Метрики ===
-MAX_LATENCY_HISTORY = 100  # Храним последние 100 значений пинга
+MAX_LATENCY_HISTORY = 100
 
-# === Логирование ===
 LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
