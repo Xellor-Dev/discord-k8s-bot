@@ -20,7 +20,15 @@ spec:
         image: gcr.io/sharp-oxygen-478014-k9/discord-bot:v2
         # Политика загрузки: всегда проверять, нет ли новой версии
         imagePullPolicy: Always
-        
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+          # readOnlyRootFilesystem: true  # Пока закомментируем
+          
         # Передаем токен из Секрета в переменную окружения
         env:
           # === Discord Token ===
