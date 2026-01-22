@@ -13,8 +13,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. Теперь копируем сам код бота
-COPY bot.py .
+# 6. Теперь копируем весь код бота (модульная структура)
+COPY . .
 
 # 7. Команда запуска
 CMD ["python", "bot.py"]
