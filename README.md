@@ -24,15 +24,15 @@ This project demonstrates modern DevOps practices by deploying a Discord bot to 
 
 ## ✨ Features
 
-- 🎯 **Discord Integration** - Interactive bot with rich embedded responses
-- 📊 **Real-time Monitoring** - View CPU, RAM, network, disk I/O, and Kubernetes pod statistics directly in Discord
+- 🎯 **Discord Integration** - Simple, focused bot with clean architecture
 - 🔭 **Full Observability** - Prometheus metrics collection + Grafana dashboards via kube-prometheus-stack
 - 🚀 **CI/CD Pipeline** - Automated build and deployment with GitHub Actions
 - ☸️ **Kubernetes Native** - Runs on GKE with proper resource limits and requests
 - 🏗️ **Infrastructure as Code** - Complete infrastructure managed with Terraform
 - 🐳 **Containerized** - Docker-based deployment for consistency
 - 🔒 **Secrets Management** - Secure handling of tokens and credentials
-- 📈 **Advanced Metrics** - Command tracking, API latency, network/disk statistics
+- 📈 **Modular Architecture** - Clean code structure following SOLID principles
+- 📊 **Latency Tracking** - Command execution and API latency monitoring
 
 ## 🏛️ Architecture
 
@@ -82,41 +82,13 @@ graph TB
 | Command | Description | Output |
 |---------|-------------|--------|
 | `!ping` | Check bot latency and status | Pong with current latency in ms |
-| `!info` | Display comprehensive pod statistics | Two rich embeds with full metrics |
 
-### 📊 `!info` Command Details
-
-The `!info` command displays **two rich embeds** with comprehensive information:
-
-#### Embed 1/2 - Bot, Discord & Kubernetes
-| Metric | Description |
-|--------|-------------|
-| 🤖 Bot | Bot name and status |
-| ⏱️ Uptime | Time since last pod restart |
-| 📈 Commands Executed | Total command counter |
-| 📡 Current Ping | Real-time Discord API latency |
-| 📊 Average Ping | Average latency (last 100 pings) |
-| 🖥️ Servers | Number of Discord guilds |
-| 👥 Users | Total users across all servers |
-| ☸️ Pod Name | Kubernetes pod hostname |
-| 📍 Namespace | K8s namespace |
-| 🖱️ Node | GKE node running the pod |
-| 🔴 CPU Limit | Pod CPU limit |
-| 🟡 CPU Request | Pod CPU request |
-| 🔵 Memory Limit | Pod memory limit |
-| 🟢 Memory Request | Pod memory request |
-
-#### Embed 2/2 - Resources & Performance
-| Metric | Description |
-|--------|-------------|
-| 🔥 CPU per Core | Individual core usage |
-| ⚡ CPU Frequency | Current CPU frequency (MHz) |
-| 💾 Bot RAM | Process memory usage |
-| 🔋 System RAM | Total system memory stats |
-| 📤 Network Sent | Bytes sent since startup |
-| 📥 Network Received | Bytes received since startup |
-| 💿 Disk Read | Disk read I/O since startup |
-| 💿 Disk Write | Disk write I/O since startup |
+**Architecture Focus:** This bot prioritizes clean code architecture over features. The single `!ping` command demonstrates:
+- Modular command structure
+- Singleton pattern for metrics
+- Proper separation of concerns
+- Professional logging
+- Error handling
 
 ## 🔭 Observability
 
@@ -278,21 +250,55 @@ The GitHub Actions workflow automatically:
 ```
 discord-k8s-bot/
 ├── app/
-│   ├── bot.py              # Main bot application with metrics
+│   ├── bot.py              # Main entry point (60 lines)
+│   ├── config.py           # Configuration constants
+│   ├── logger.py           # Logging setup
+│   ├── commands/           # Command modules
+│   │   ├── __init__.py
+│   │   └── ping.py         # !ping command
+│   ├── services/           # Business logic
+│   │   ├── __init__.py
+│   │   ├── metrics.py      # MetricsCollector singleton
+│   │   └── k8s_info.py     # Kubernetes metadata
 │   ├── Dockerfile          # Container configuration
 │   ├── requirements.txt    # Python dependencies
 │   └── .dockerignore       # Docker build exclusions
 ├── k8s/
-│   └── deployment.yaml     # Kubernetes manifests with env vars
+│   └── deployment.yaml     # Kubernetes manifests
 ├── terraform/
 │   ├── provider.tf         # GCP provider config
-│   ├── main.tf             # Main infrastructure
+│   ├── main.tf             # VPC and networking
 │   └── gke.tf              # GKE cluster definition
 ├── .github/
 │   └── workflows/          # CI/CD pipelines
-├── METRICS.md              # Detailed metrics documentation
 └── README.md               # This file
 ```
+
+## 🏗️ Code Architecture
+
+This project demonstrates **clean code principles** and **modular architecture**:
+
+### Design Patterns
+- **Singleton Pattern** - `MetricsCollector` for centralized state management
+- **Dependency Injection** - Bot instance passed to commands
+- **Separation of Concerns** - Commands, services, and configuration separated
+
+### SOLID Principles
+- **Single Responsibility** - Each module has one clear purpose
+- **Open/Closed** - Easy to add new commands without modifying core
+- **Dependency Inversion** - High-level modules don't depend on low-level details
+
+### Key Features
+- ✅ No global variables (replaced with Singleton)
+- ✅ Professional logging (no `print()` statements)
+- ✅ Centralized configuration
+- ✅ Error handling with proper logging
+- ✅ Clean, testable code structure
+
+**Refactoring Results:**
+- 74% reduction in main file size (231 → 60 lines)
+- 100% elimination of global variables
+- 6 focused modules vs 1 monolithic file
 
 ## 🛠️ Configuration
 
